@@ -1,7 +1,6 @@
 name: Deploy
 
-on:
-  push:
+on: [pull_request, push, workflow_dispatch]
 
 jobs:
   build:
@@ -20,23 +19,11 @@ jobs:
           distribution: 'zulu'
           cache: gradle
 
+      - name: Build with Gradle
+        run: ./gradlew properJar
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          path: build/libs/
-  upload:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-
-      - name: Read gradle.properties
-        uses: BrycensRanch/read-properties-action@v1
-        id: properties
-        with:
-          file: gradle.properties
-          all: true
+          name: build
+          path: build/libs/*.jar
