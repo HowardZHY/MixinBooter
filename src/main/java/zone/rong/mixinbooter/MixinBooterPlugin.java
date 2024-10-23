@@ -111,7 +111,7 @@ public final class MixinBooterPlugin implements IFMLLoadingPlugin {
 
     private void addTransformationExclusions() {
         Launch.classLoader.addTransformerExclusion("scala.");
-        Launch.classLoader.addTransformerExclusion("com.llamalad7.mixinextras.");
+        Launch.classLoader.addTransformerExclusion("com.llamalad7.mixinextras.wrapper.");
     }
 
     private void initialize() {
