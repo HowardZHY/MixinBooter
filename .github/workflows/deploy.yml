@@ -1,10 +1,6 @@
 name: Deploy
 
-on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+'
+on: [pull_request, push, workflow_dispatch]
 
 jobs:
   build:
@@ -23,64 +19,11 @@ jobs:
           distribution: 'zulu'
           cache: gradle
 
-      - name: Publish to Maven
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: |
-            publish
-            -PCleanroomMaven=${{ vars.CLEANROOM_MAVEN }}
-            -PCleanroomMavenUsername=${{ secrets.MAVEN_NAME }}
-            -PCleanroomMavenPassword=${{ secrets.MAVEN_PASSWORD }}
+      - name: Build with Gradle
+        run: ./gradlew properJar
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          path: build/libs/
-  upload:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-
-      - name: Read gradle.properties
-        uses: BrycensRanch/read-properties-action@v1
-        id: properties
-        with:
-          file: gradle.properties
-          all: true
-
-      - name: Read CHANGELOG.md
-        id: changelog
-        uses: 3liz/changelog-release@0.2.0
-        with:
-          add_emojis: false
-
-      - name: Publish to CurseForge + Modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          name: ${{ steps.properties.outputs.mod_name }} ${{ steps.properties.outputs.mod_version }}
-          version: ${{ steps.properties.outputs.mod_version }}
-          version-type: ${{ steps.properties.outputs.version_type }}
-          changelog: ${{ steps.changelog.outputs.markdown }}
-          loaders: forge
-          game-versions: |
-            [1.8,1.12.2]
-          game-version-filter: releases
-          java: 8
-          files: |
-            artifact/!(*-@(dev|sources|javadoc)).jar
-            artifact/*-@(dev).jar
-            artifact/*-@(sources).jar
-            artifact/*-@(javadoc).jar
-
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-          curseforge-id: 419286
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-
-          modrinth-id: G1ckZuWK
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          name: build
+          path: build/libs/*.jar
