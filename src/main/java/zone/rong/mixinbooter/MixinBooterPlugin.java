@@ -243,7 +243,7 @@ public final class MixinBooterPlugin implements IFMLLoadingPlugin {
                     }
                 }
             }
-        } catch (IllegalAccessException ignore) { }
+        } catch (Exception ignore) { }
         URL url = Launch.classLoader.getResource(config.getName());
         if (url != null) {
             String jar = this.getJarNameFromResource(url);
