@@ -55,7 +55,7 @@ public class LoadControllerMixin {
                 for (ASMDataTable.ASMData annotated : annotatedData) {
                     try {
                         Class<?> clazz = Class.forName(annotated.getClassName());
-                        MixinBooterPlugin.LOGGER.info("Loading annotated late loader [{}] for its mixins.", clazz.getName());
+                        MixinBooterPlugin.logInfo("Loading annotated late loader [%s] for its mixins.", clazz.getName());
                         Object instance = clazz.newInstance();
                         if (instance instanceof ILateMixinLoader) {
                             lateLoaders.add((ILateMixinLoader) instance);
@@ -71,7 +71,7 @@ public class LoadControllerMixin {
                 for (ASMDataTable.ASMData itf : interfaceData) {
                     try {
                         Class<?> clazz = Class.forName(itf.getClassName().replace('/', '.'));
-                        MixinBooterPlugin.LOGGER.info("Loading late loader [{}] for its mixins.", clazz.getName());
+                        MixinBooterPlugin.logInfo("Loading late loader [%s] for its mixins.", clazz.getName());
                         lateLoaders.add((ILateMixinLoader) clazz.newInstance());
                     } catch (Throwable t) {
                         throw new RuntimeException("Unexpected error.", t);
@@ -82,18 +82,17 @@ public class LoadControllerMixin {
                 Collection<String> presentMods = this.loader.getActiveModList().stream().map(ModContainer::getModId).collect(Collectors.toSet());
 
                 for (ILateMixinLoader lateLoader : lateLoaders) {
-                    for (String mixinConfig : lateLoader.getMixinConfigs()) {
-                        Context context = new Context(mixinConfig, presentMods);
-                        if (lateLoader.shouldMixinConfigQueue(context)) {
-                            IMixinConfigHijacker hijacker = MixinBooterPlugin.getHijacker(mixinConfig);
-                            if (hijacker != null) {
-                                MixinBooterPlugin.LOGGER.info("Mixin configuration [{}] intercepted by [{}].", mixinConfig, hijacker.getClass().getName());
-                            } else {
-                                MixinBooterPlugin.LOGGER.info("Adding [{}] mixin configuration.", mixinConfig);
+                    try {
+                        for (String mixinConfig : lateLoader.getMixinConfigs()) {
+                            Context context = new Context(mixinConfig, presentMods);
+                            if (lateLoader.shouldMixinConfigQueue(context)) {
+                                MixinBooterPlugin.logInfo("Adding [%s] mixin configuration.", mixinConfig);
                                 Mixins.addConfiguration(mixinConfig);
                                 lateLoader.onMixinConfigQueued(context);
                             }
                         }
+                    } catch (Throwable t) {
+                        MixinBooterPlugin.logError("Failed to execute late loader [%s].", t, lateLoader.getClass().getName());
                     }
                 }
             }
@@ -103,13 +102,8 @@ public class LoadControllerMixin {
             if (!unconventionalConfigs.isEmpty()) {
                 MixinBooterPlugin.LOGGER.info("Appending unconventional mixin configurations...");
                 for (String unconventionalConfig : unconventionalConfigs) {
-                    IMixinConfigHijacker hijacker = MixinBooterPlugin.getHijacker(unconventionalConfig);
-                    if (hijacker != null) {
-                        MixinBooterPlugin.LOGGER.info("Mixin configuration [{}] intercepted by [{}].", unconventionalConfig, hijacker.getClass().getName());
-                    } else {
-                        MixinBooterPlugin.LOGGER.info("Adding [{}] mixin configuration.", unconventionalConfig);
-                        Mixins.addConfiguration(unconventionalConfig);
-                    }
+                    MixinBooterPlugin.logInfo("Adding [%s] mixin configuration.", unconventionalConfig);
+                    Mixins.addConfiguration(unconventionalConfig);
                 }
             }
 
