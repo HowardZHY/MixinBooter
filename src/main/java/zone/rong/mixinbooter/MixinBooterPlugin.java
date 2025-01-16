@@ -226,8 +226,8 @@ public final class MixinBooterPlugin implements IFMLLoadingPlugin {
             try {
                 modApiManager$dataTable = ModAPIManager.class.getDeclaredField("dataTable");
                 modApiManager$dataTable.setAccessible(true);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Unable to reflectively retrieve ModAPIManager#dataTable", e);
+            } catch (Exception e) {
+                LOGGER.error("Unable to reflectively retrieve ModAPIManager#dataTable: " + e);
             }
         }
         try {
